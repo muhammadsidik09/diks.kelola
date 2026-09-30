@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diks Finance</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#182230;--muted:#718096;--green:#16845b;--red:#d94b59;--blue:#335eea}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:linear-gradient(130deg,#172b4d,#246b62);color:white;padding:26px 18px 70px}
+.wrap{max-width:850px;margin:auto;padding:0 16px}h1{margin:0;font-size:25px}header p{margin:5px 0 0;color:#d4e5e5}
+main{max-width:850px;margin:-48px auto 40px;padding:0 16px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.card{background:var(--card);border-radius:15px;padding:16px;box-shadow:0 5px 20px #172b4d0c;min-width:0}.metric small{color:var(--muted);display:block}.metric strong{display:block;font-size:clamp(15px,3.8vw,22px);margin-top:8px;overflow-wrap:anywhere}.income{color:var(--green)}.expense{color:var(--red)}
+.panel{margin-top:14px}.panel h2{font-size:18px;margin:0 0 14px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}input,select,button{font:inherit}input,select{width:100%;padding:12px;border:1px solid #dce2ea;border-radius:10px;background:white;color:var(--ink)}.wide{grid-column:1/-1}button{border:0;border-radius:10px;padding:12px 15px;background:var(--blue);color:white;font-weight:650;cursor:pointer}.mutebtn{background:#edf1f7;color:#344054}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.filters{display:flex;gap:9px;align-items:center}.filters select{max-width:190px}.list{display:grid;gap:8px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf0f4}.item:last-child{border:0}.desc{font-weight:650}.sub{font-size:12px;color:var(--muted);margin-top:3px}.amount{font-weight:700;white-space:nowrap}.del{background:#fff0f1;color:var(--red);padding:7px 10px;margin-left:6px}.empty{text-align:center;color:var(--muted);padding:24px 0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:520px){.cards{gap:7px}.card{padding:12px}.metric small{font-size:11px}.formgrid{grid-template-columns:1fr}.wide{grid-column:auto}.filters{align-items:stretch;flex-direction:column}.filters select{max-width:none}}
+</style>
+</head>
+<body>
+<div id="pinScreen" style="position:fixed;inset:0;background:#172b4d;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;color:#182230">
+ <form id="pinForm" style="background:white;padding:25px;border-radius:18px;width:min(100%,360px);box-shadow:0 12px 40px #0003">
+  <h2 style="margin:0 0 8px">🔐 Diks Finance</h2><p id="pinPrompt" style="color:#718096">Buat PIN keamanan 4–6 digit</p>
+  <input id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Masukkan PIN" type="password" autocomplete="off" required style="width:100%;padding:14px;border:1px solid #dce2ea;border-radius:10px;font-size:20px;letter-spacing:8px;text-align:center">
+  <p id="pinError" style="color:#d94b59;font-size:13px;min-height:18px"></p>
+  <button style="width:100%" type="submit" id="pinSubmit">Lanjutkan</button>
+  <p style="font-size:11px;color:#718096;margin:12px 0 0">PIN disimpan pada browser perangkat ini. Jangan lupa PIN Anda.</p>
+ </form>
+</div>
+<header><div class="wrap"><h1>💰 Diks Finance</h1><p>Kelola uangmu, pantau setiap rupiah.</p></div></header>
+<main>
+<section class="cards">
+<div class="card metric"><small>Total Pemasukan</small><strong class="income" id="income">Rp0</strong></div>
+<div class="card metric"><small>Total Pengeluaran</small><strong class="expense" id="expense">Rp0</strong></div>
+<div class="card metric"><small>Saldo</small><strong id="balance">Rp0</strong></div>
+</section>
+<section class="card panel">
+<h2>Tambah Transaksi</h2>
+<form id="form" class="formgrid">
+<div><label for="type">Jenis transaksi</label><select id="type"><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+<div><label for="amount">Nominal (Rp)</label><input id="amount" type="number" min="1" step="1" placeholder="Contoh: 50000" required></div>
+<div><label for="category">Kategori</label><select id="category"><option>Gaji</option><option>Usaha</option><option>Bonus</option><option>Makanan</option><option>Transportasi</option><option>Tagihan</option><option>Belanja</option><option>Tabungan</option><option>Lainnya</option></select></div>
+<div><label for="date">Tanggal</label><input id="date" type="date" required></div>
+<div class="wide"><label for="note">Keterangan (opsional)</label><input id="note" maxlength="80" placeholder="Misalnya: gaji mingguan"></div>
+<button class="wide" type="submit">＋ Simpan Transaksi</button>
+</form>
+</section>
+<section class="card panel">
+<div class="row"><h2>Riwayat Transaksi</h2><div class="filters"><select id="month"><option value="all">Semua bulan</option></select></div></div>
+<div id="transactions" class="list"></div>
+<div class="actions"><button class="mutebtn" id="export">Ekspor CSV</button><button class="mutebtn" id="clear">Hapus Semua Data</button></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
+const KEY='diks_finance_transactions_v1';
+const PINKEY='diks_finance_pin_v1';
+const pinScreen=$('pinScreen'), pinForm=$('pinForm'), pinInput=$('pinInput');
+let pinMode=localStorage.getItem(PINKEY)?'unlock':'create';
+function setupPin(){ $('pinPrompt').textContent=pinMode==='create'?'Buat PIN keamanan 4–6 digit':'Masukkan PIN untuk membuka aplikasi';$('pinSubmit').textContent=pinMode==='create'?'Simpan PIN':'Buka Aplikasi'; }
+setupPin();
+pinForm.addEventListener('submit',e=>{e.preventDefault();const v=pinInput.value;if(!/^\d{4,6}$/.test(v)){$('pinError').textContent='PIN harus 4–6 digit angka.';return}
+ if(pinMode==='create'){localStorage.setItem(PINKEY,v);pinScreen.remove();}else if(v===localStorage.getItem(PINKEY)){pinScreen.remove();}else{$('pinError').textContent='PIN salah. Coba lagi.';pinInput.value='';}
+});
+let transactions=JSON.parse(localStorage.getItem(KEY)||'[]');
+const rupiah=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+const today=new Date().toISOString().slice(0,10);$('date').value=today;
+function save(){localStorage.setItem(KEY,JSON.stringify(transactions));render()}
+function render(){
+ const selected=$('month').value;
+ const months=[...new Set(transactions.map(t=>t.date.slice(0,7)))].sort().reverse();
+ $('month').innerHTML='<option value="all">Semua bulan</option>'+months.map(m=>`<option value="${m}">${new Date(m+'-02').toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</option>`).join('');
+ $('month').value=months.includes(selected)?selected:'all';
+ const shown=transactions.filter(t=>$('month').value==='all'||t.date.startsWith($('month').value));
+ const inc=shown.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+ const out=shown.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+ $('income').textContent=rupiah(inc);$('expense').textContent=rupiah(out);$('balance').textContent=rupiah(inc-out);
+ $('transactions').innerHTML=shown.length?shown.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).map(t=>`
+ <div class="item"><div><div class="desc">${escapeHtml(t.note||t.category)}</div><div class="sub">${escapeHtml(t.category)} · ${new Date(t.date+'T12:00:00').toLocaleDateString('id-ID')}</div></div>
+ <div class="row"><span class="amount ${t.type==='in'?'income':'expense'}">${t.type==='in'?'+':'−'}${rupiah(t.amount)}</span><button class="del" data-id="${t.id}" aria-label="Hapus transaksi">×</button></div></div>`).join(''):'<div class="empty">Belum ada transaksi pada periode ini.</div>';
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('form').addEventListener('submit',e=>{e.preventDefault();const amount=Number($('amount').value);if(!Number.isSafeInteger(amount)||amount<=0){alert('Masukkan nominal rupiah berupa bilangan bulat lebih dari 0.');return}
+transactions.push({id:Date.now()+Math.floor(Math.random()*1000),type:$('type').value,amount,category:$('category').value,date:$('date').value,note:$('note').value.trim()});$('amount').value='';$('note').value='';save()});
+$('transactions').addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!b)return;if(confirm('Hapus transaksi ini?')){transactions=transactions.filter(t=>t.id!==Number(b.dataset.id));save()}});
+$('month').addEventListener('change',render);
+$('clear').addEventListener('click',()=>{if(confirm('Yakin menghapus seluruh riwayat? Data yang dihapus tidak bisa dikembalikan.')){transactions=[];save()}});
+$('export').addEventListener('click',()=>{const rows=[['Tanggal','Jenis','Kategori','Nominal','Keterangan'],...transactions.map(t=>[t.date,t.type==='in'?'Pemasukan':'Pengeluaran',t.category,t.amount,t.note])];const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='diks-finance.csv';a.click();URL.revokeObjectURL(a.href)});
+render();
+</script>
+</body></html>
